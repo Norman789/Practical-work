@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамічна тема</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .theme-selector, .custom-colors {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: transform 0.2s, background-color 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            background-color: #f0f0f0;
+        }
+
+        .custom-color-input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        h1, h3 {
+            font-size: 2em;
+        }
+
+        h1:hover, h3:hover {
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Динамічне налаштування теми</h1>
+        <div class="theme-selector">
+            <button onclick="setTheme('light')">Світла тема</button>
+            <button onclick="setTheme('dark')">Темна тема</button>
+            <button onclick="setTheme('colorful')">Кольорова тема</button>
+        </div>
+        <div class="custom-colors">
+            <h3>Налаштуйте власні кольори</h3>
+            <input type="color" id="bgColor" class="custom-color-input" placeholder="Колір фону">
+            <input type="color" id="textColor" class="custom-color-input" placeholder="Колір тексту">
+            <button onclick="setCustomColors()">Застосувати кольори</button>
+        </div>
+    </div>
+    <script>
+        window.onload = function () {
+            const savedTheme = localStorage.getItem("theme");
+            const savedColors = JSON.parse(localStorage.getItem("customColors"));
+
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            }
+
+            if (savedColors) {
+                applyCustomColors(savedColors.bgColor, savedColors.textColor);
+            }
+        };
+        function setTheme(theme) {
+            localStorage.setItem("theme", theme);
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            const body = document.body;
+
+            switch (theme) {
+                case "light":
+                    body.style.backgroundColor = "#ffffff";
+                    body.style.color = "#000000";
+                    break;
+                case "dark":
+                    body.style.backgroundColor = "#000000";
+                    body.style.color = "#ffffff";
+                    break;
+                case "colorful":
+                    body.style.backgroundColor = "#ffefd5";
+                    body.style.color = "#ff6347";
+                    break;
+                default:
+                    body.style.backgroundColor = "#ffffff";
+                    body.style.color = "#000000";
+            }
+        }
+        function setCustomColors() {
+            const bgColor = document.getElementById("bgColor").value;
+            const textColor = document.getElementById("textColor").value;
+
+            localStorage.setItem("customColors", JSON.stringify({ bgColor, textColor }));
+            applyCustomColors(bgColor, textColor);
+        }
+
+        function applyCustomColors(bgColor, textColor) {
+            const body = document.body;
+            body.style.backgroundColor = bgColor;
+            body.style.color = textColor;
+        }
+    </script>
+</body>
+</html>
