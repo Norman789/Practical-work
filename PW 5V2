@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пошук погоди</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #87CEFA, #00BFFF);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #1E90FF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #4682B4;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Пошук погоди</h1>
+        <input type="text" id="city" placeholder="Введіть назву міста">
+        <button onclick="fetchWeather()">Отримати погоду</button>
+        <div id="result" class="result"></div>
+        <div id="error" class="error"></div>
+    </div>
+    <script src="weather.js"></script>
+<script>
+    const API_KEY = 'YOUR_OPENCAGE_API_KEY'; // Вставте ваш API ключ OpenCage
+const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
+
+async function fetchWeather() {
+    const city = document.getElementById("city").value.trim();
+    const resultDiv = document.getElementById("result");
+    const errorDiv = document.getElementById("error");
+    resultDiv.innerHTML = "";
+    errorDiv.innerHTML = "";
+
+    if (!city) {
+        errorDiv.innerText = "Будь ласка, введіть назву міста!";
+        return;
+    }
+
+    try {
+        // Геолокація через OpenCage
+        const geolocationResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${API_KEY}`);
+        const geolocationData = await geolocationResponse.json();
+        
+        if (!geolocationData.results || geolocationData.results.length === 0) {
+            throw new Error("Місто не знайдено. Спробуйте ще раз.");
+        }
+
+        const { lat, lng } = geolocationData.results[0].geometry;
+
+        // Запит до Open-Meteo API
+        const weatherResponse = await fetch(`${WEATHER_API}?latitude=${lat}&longitude=${lng}&current_weather=true`);
+        const weatherData = await weatherResponse.json();
+
+        if (!weatherData.current_weather) {
+            throw new Error("Неможливо отримати погодні дані.");
+        }
+
+        const { temperature, windspeed, weathercode } = weatherData.current_weather;
+        const weatherInfo = `Температура: ${temperature}°C, Швидкість вітру: ${windspeed} км/год, Код погодних умов: ${weathercode}`;
+        
+        resultDiv.innerText = weatherInfo;
+
+        // Зберігання даних у sessionStorage та localStorage
+        const weatherCache = { city, temperature, windspeed, weathercode };
+        sessionStorage.setItem(city, JSON.stringify(weatherCache));
+        localStorage.setItem(city, JSON.stringify(weatherCache));
+
+    } catch (error) {
+        errorDiv.innerText = error.message || "Сталася помилка під час отримання даних.";
+    }
+}
+
+</script>
+</body>
+</html>
