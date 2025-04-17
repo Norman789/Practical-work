@@ -68,57 +68,56 @@
         <div id="result" class="result"></div>
         <div id="error" class="error"></div>
     </div>
-    <script src="weather.js"></script>
-<script>
-    const API_KEY = 'YOUR_OPENCAGE_API_KEY'; // Вставте ваш API ключ OpenCage
-const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
+    <script>
+        const API_KEY = '0592f8eec9f24e89b1bf671714c75af0';
+        const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
 
-async function fetchWeather() {
-    const city = document.getElementById("city").value.trim();
-    const resultDiv = document.getElementById("result");
-    const errorDiv = document.getElementById("error");
-    resultDiv.innerHTML = "";
-    errorDiv.innerHTML = "";
+        async function fetchWeather() {
+            const city = document.getElementById("city").value.trim();
+            const resultDiv = document.getElementById("result");
+            const errorDiv = document.getElementById("error");
+            resultDiv.innerHTML = "";
+            errorDiv.innerHTML = "";
 
-    if (!city) {
-        errorDiv.innerText = "Будь ласка, введіть назву міста!";
-        return;
-    }
+            if (!city) {
+                errorDiv.innerText = "Будь ласка, введіть назву міста!";
+                return;
+            }
 
-    try {
-        // Геолокація через OpenCage
-        const geolocationResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${API_KEY}`);
-        const geolocationData = await geolocationResponse.json();
-        
-        if (!geolocationData.results || geolocationData.results.length === 0) {
-            throw new Error("Місто не знайдено. Спробуйте ще раз.");
+            try {
+                const geolocationResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${API_KEY}`);
+                const geolocationData = await geolocationResponse.json();
+
+                if (!geolocationData.results || geolocationData.results.length === 0) {
+                    throw new Error("Місто не знайдено. Спробуйте ще раз.");
+                }
+
+                const lat = geolocationData.results[0].geometry.lat;
+                const lng = geolocationData.results[0].geometry.lng;
+
+                const weatherResponse = await fetch(`${WEATHER_API}?latitude=${lat}&longitude=${lng}&current_weather=true`);
+                const weatherData = await weatherResponse.json();
+
+                if (!weatherData.current_weather) {
+                    throw new Error("Неможливо отримати погодні дані.");
+                }
+
+                const temperature = weatherData.current_weather.temperature;
+                const windspeed = weatherData.current_weather.windspeed;
+                const weathercode = weatherData.current_weather.weathercode;
+
+                const weatherInfo = `Температура: ${temperature}°C, Швидкість вітру: ${windspeed} км/год, Код погодних умов: ${weathercode}`;
+                
+                resultDiv.innerText = weatherInfo;
+
+                const weatherCache = { city, temperature, windspeed, weathercode };
+                sessionStorage.setItem(city, JSON.stringify(weatherCache));
+                localStorage.setItem(city, JSON.stringify(weatherCache));
+
+            } catch (error) {
+                errorDiv.innerText = error.message || "Сталася помилка під час отримання даних.";
+            }
         }
-
-        const { lat, lng } = geolocationData.results[0].geometry;
-
-        // Запит до Open-Meteo API
-        const weatherResponse = await fetch(`${WEATHER_API}?latitude=${lat}&longitude=${lng}&current_weather=true`);
-        const weatherData = await weatherResponse.json();
-
-        if (!weatherData.current_weather) {
-            throw new Error("Неможливо отримати погодні дані.");
-        }
-
-        const { temperature, windspeed, weathercode } = weatherData.current_weather;
-        const weatherInfo = `Температура: ${temperature}°C, Швидкість вітру: ${windspeed} км/год, Код погодних умов: ${weathercode}`;
-        
-        resultDiv.innerText = weatherInfo;
-
-        // Зберігання даних у sessionStorage та localStorage
-        const weatherCache = { city, temperature, windspeed, weathercode };
-        sessionStorage.setItem(city, JSON.stringify(weatherCache));
-        localStorage.setItem(city, JSON.stringify(weatherCache));
-
-    } catch (error) {
-        errorDiv.innerText = error.message || "Сталася помилка під час отримання даних.";
-    }
-}
-
-</script>
+    </script>
 </body>
 </html>
